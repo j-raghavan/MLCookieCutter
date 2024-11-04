@@ -18,7 +18,10 @@ jobs:
         run: |
           git fetch --tags
           latest_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          # Strip the 'v' prefix from the latest tag
+          latest_tag_without_v=${latest_tag#v}
           echo "latest_tag=$latest_tag" >> $GITHUB_ENV
+          echo "latest_tag_without_v=$latest_tag_without_v" >> $GITHUB_ENV
 
       - name: Determine Version Increment
         id: determine_increment
@@ -40,22 +43,25 @@ jobs:
       - name: Increment the Version
         id: increment_version
         run: |
-          IFS='.' read -r major minor patch <<< "${{ env.latest_tag#v }}"
+          # Read the major, minor, and patch versions from the latest tag without 'v' prefix
+          IFS='.' read -r major minor patch <<< "$latest_tag_without_v"
 
-          case "${{ env.increment_type }}" in
+          # Increment based on the determined type
+          case "$increment_type" in
             major) major=$((major + 1)); minor=0; patch=0 ;;
             minor) minor=$((minor + 1)); patch=0 ;;
             patch) patch=$((patch + 1)) ;;
           esac
 
+          # Define the new tag with 'v' prefix
           new_tag="v${major}.${minor}.${patch}"
           echo "New tag: $new_tag"
           echo "new_tag=$new_tag" >> $GITHUB_ENV
 
       - name: Check if Tag Already Exists
         run: |
-          if git rev-parse "${{ env.new_tag }}" >/dev/null 2>&1; then
-            echo "Tag ${{ env.new_tag }} already exists. Exiting..."
+          if git rev-parse "$new_tag" >/dev/null 2>&1; then
+            echo "Tag $new_tag already exists. Exiting..."
             exit 0
           fi
 
@@ -64,7 +70,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          git tag ${{ env.new_tag }}
-          git push origin ${{ env.new_tag }}
+          git tag "$new_tag"
+          git push origin "$new_tag"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
