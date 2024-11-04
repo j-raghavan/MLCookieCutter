@@ -74,4 +74,13 @@ Then, go to the original repository and click on "New Pull Request."
 - [pytest Documentation](https://docs.pytest.org/en/stable/contents.html)
 
 
+
+### Versioning
+On merges to `master`, our workflow increments the version automatically based on labels or commit messages:
+- **Major**: Use the label `major` or include `BREAKING CHANGE:` in the commit message.
+- **Minor**: Use the label `minor` or `feat:` in the commit message.
+- **Patch**: Use the label `patch` or `fix:` in the commit message.
+
+The workflow will create and push a new semantic version tag accordingly.
+
 Thank you for helping make MLCookieCutter better!

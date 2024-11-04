@@ -1,0 +1,47 @@
+name: Python Semantic Version Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'  # Triggers workflow on tags matching semantic versioning pattern
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          export PATH="$HOME/.local/bin:$PATH"
+
+      - name: Install Dependencies
+        run: poetry install
+
+      - name: Extract Version Number
+        id: extract_version
+        run: |
+          # Extract version from the tag (e.g., v1.2.3)
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Create Release
+        uses: actions/create-release@v1
+        with:
+          tag_name: ${{ github.ref_name }}
+          release_name: "Release ${{ steps.extract_version.outputs.VERSION }}"
+          body: |
+            ## Changes in this release:
+            - Automatically generated release
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
